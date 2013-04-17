@@ -1,14 +1,16 @@
-" Rspec mappings
-map <Leader>t :call RunCurrentSpecFile()<CR>
-map <Leader>s :call RunNearestSpec()<CR>
-map <Leader>l :call RunLastSpec()<CR>
-
 let s:plugin_path = expand("<sfile>:p:h:h")
 
-if has("gui_running") && has("gui_macvim")
-  let g:rspec_command = "silent !" . s:plugin_path . "/bin/run_in_os_x_terminal 'rspec {spec}'"
-else
-  let g:rspec_command = "!echo rspec {spec} && rspec {spec}"
+if !exists("g:rspec_command")
+  if has("gui_running") && has("gui_macvim")
+    let g:rspec_command = "silent !" . s:plugin_path . "/bin/run_in_os_x_terminal 'rspec {spec}'"
+  else
+    let s:cmd = "rspec {spec}"
+    if exists(":Dispatch")
+      let g:rspec_command = "Dispatch " . s:cmd
+    else
+      let g:rspec_command = "!echo " . s:cmd . " && " . s:cmd
+    endif
+  endif
 endif
 
 function! RunCurrentSpecFile()
@@ -16,6 +18,8 @@ function! RunCurrentSpecFile()
     let l:spec = @%
     call SetLastSpecCommand(l:spec)
     call RunSpecs(l:spec)
+  else
+    RunLastSpec()
   endif
 endfunction
 
@@ -24,6 +28,8 @@ function! RunNearestSpec()
     let l:spec = @% . ":" . line(".")
     call SetLastSpecCommand(l:spec)
     call RunSpecs(l:spec)
+  else
+    RunLastSpec()
   endif
 endfunction
 
@@ -34,7 +40,7 @@ function! RunLastSpec()
 endfunction
 
 function! InSpecFile()
-  return match(expand("%"), "_spec.rb$") != -1
+  return match(expand("%"), "_spec.rb$") != -1 || match(expand("%"), ".feature$") != -1
 endfunction
 
 function! SetLastSpecCommand(spec)
