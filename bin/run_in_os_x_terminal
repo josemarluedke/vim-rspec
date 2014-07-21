@@ -10,8 +10,4 @@ on run argv
 
     activate
   end tell
-
-  tell application "MacVim"
-    activate
-  end tell
 end run
